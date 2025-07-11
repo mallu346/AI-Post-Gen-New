@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gallery-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .image-card {
+        border-radius: 15px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        position: relative;
+    }
+    
+    .image-card:hover {
+        transform: scale(1.02);
+    }
+    
+    .image-card img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+    }
+    
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    
+    .image-card:hover .image-overlay {
+        opacity: 1;
+    }
+    
+    .service-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    
+    .service-huggingface { background: #ff6b35; color: white; }
+    .service-pollinations { background: #4ecdc4; color: white; }
+    .service-mock { background: #95a5a6; color: white; }
+    
+    .bulk-actions {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        display: none;
+    }
+    
+    .bulk-actions.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Gallery Header -->
+<div class="gallery-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-images me-3"></i>My Gallery
+                </h1>
+                <p class="lead mb-0">Your personal collection of AI-generated artwork</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'generate_image' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-plus me-2"></i>Create New Image
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats Section -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-images text-primary mb-2" style="font-size: 2rem;"></i>
+                <h3 class="fw-bold text-primary">{{ total_images }}</h3>
+                <p class="mb-0 text-muted">Total Images</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-eye text-success mb-2" style="font-size: 2rem;"></i>
+                <h3 class="fw-bold text-success">{{ total_views }}</h3>
+                <p class="mb-0 text-muted">Total Views</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-heart text-danger mb-2" style="font-size: 2rem;"></i>
+                <h3 class="fw-bold text-danger">{{ total_likes }}</h3>
+                <p class="mb-0 text-muted">Total Likes</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-globe text-info mb-2" style="font-size: 2rem;"></i>
+                <h3 class="fw-bold text-info">{{ public_posts }}</h3>
+                <p class="mb-0 text-muted">Public Posts</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Stats -->
+    {% if service_stats %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Generation Sources
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for source, stats in service_stats.items %}
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <span class="service-badge service-{{ source }} me-2">{{ stats.count }}</span>
+                                <span>{{ stats.display_name }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions" id="bulkActions">
+        <form method="post" action="{% url 'bulk_delete_images' %}" onsubmit="return confirm('Are you sure you want to delete the selected images?');">
+            {% csrf_token %}
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span id="selectedCount">0</span> images selected
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary me-2" onclick="clearSelection()">
+                        Clear Selection
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Selected
+                    </button>
+                </div>
+            </div>
+            <div id="selectedImages"></div>
+        </form>
+    </div>
+
+    <!-- Gallery Controls -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Your Images ({{ total_images }})</h4>
+        <div>
+            <button type="button" class="btn btn-outline-primary" onclick="toggleBulkSelect()">
+                <i class="fas fa-check-square me-1"></i>Bulk Select
+            </button>
+        </div>
+    </div>
+
+    <!-- Images Grid -->
+    {% if images %}
+    <div class="image-grid">
+        {% for image in images %}
+        <div class="image-card card">
+            <div class="position-relative">
+                <input type="checkbox" class="image-checkbox position-absolute" 
+                       style="top: 10px; left: 10px; z-index: 10; display: none;" 
+                       value="{{ image.id }}" onchange="updateSelection()">
+                
+                {% if image.image %}
+                    <img src="{{ image.image.url }}" alt="{{ image.prompt }}" class="card-img-top">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                        <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+                
+                <!-- Service Badge -->
+                <span class="service-badge service-{{ image.generation_source }}">
+                    {{ image.get_service_display_name }}
+                </span>
+                
+                <!-- Hover Overlay -->
+                <div class="image-overlay">
+                    <div class="text-center">
+                        <a href="{% url 'post_detail' pk=image.id %}" class="btn btn-light btn-sm me-2">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'download_image' image_id=image.id %}" class="btn btn-success btn-sm me-2">
+                            <i class="fas fa-download"></i>
+                        </a>
+                        <a href="{% url 'share_image' image_id=image.id %}" class="btn btn-info btn-sm me-2">
+                            <i class="fas fa-share"></i>
+                        </a>
+                        <a href="{% url 'delete_image' image_id=image.id %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <h6 class="card-title text-truncate">{{ image.prompt|truncatechars:50 }}</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>{{ image.created_at|timesince }} ago
+                    </small>
+                    <div>
+                        {% if image.is_public %}
+                            <span class="badge bg-success">Public</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Private</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Hashtags -->
+                {% if image.get_hashtags_list %}
+                <div class="mt-2">
+                    {% for hashtag in image.get_hashtags_list|slice:":3" %}
+                        <span class="badge bg-light text-dark me-1">#{{ hashtag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-images text-muted mb-3" style="font-size: 4rem;"></i>
+        <h4>No images yet</h4>
+        <p class="text-muted">Start creating amazing AI art to build your gallery!</p>
+        <a href="{% url 'generate_image' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Your First Image
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+let bulkSelectMode = false;
+let selectedImages = new Set();
+
+function toggleBulkSelect() {
+    bulkSelectMode = !bulkSelectMode;
+    const checkboxes = document.querySelectorAll('.image-checkbox');
+    const bulkActions = document.getElementById('bulkActions');
+    
+    if (bulkSelectMode) {
+        checkboxes.forEach(cb => cb.style.display = 'block');
+        bulkActions.classList.add('show');
+    } else {
+        checkboxes.forEach(cb => {
+            cb.style.display = 'none';
+            cb.checked = false;
+        });
+        bulkActions.classList.remove('show');
+        selectedImages.clear();
+        updateSelectedCount();
+    }
+}
+
+function updateSelection() {
+    selectedImages.clear();
+    const checkboxes = document.querySelectorAll('.image-checkbox:checked');
+    checkboxes.forEach(cb => selectedImages.add(cb.value));
+    updateSelectedCount();
+    updateHiddenInputs();
+}
+
+function updateSelectedCount() {
+    document.getElementById('selectedCount').textContent = selectedImages.size;
+}
+
+function updateHiddenInputs() {
+    const container = document.getElementById('selectedImages');
+    container.innerHTML = '';
+    selectedImages.forEach(imageId => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'image_ids';
+        input.value = imageId;
+        container.appendChild(input);
+    });
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.image-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    selectedImages.clear();
+    updateSelectedCount();
+    updateHiddenInputs();
+}
+</script>
+{% endblock %}

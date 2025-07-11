@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <div class="card">
+                <div class="card-body py-5">
+                    <i class="fas fa-exclamation-triangle text-warning mb-4" style="font-size: 4rem;"></i>
+                    <h2 class="mb-3">{{ error_message|default:"Image Not Found" }}</h2>
+                    <p class="text-muted mb-4">
+                        The image you're looking for might have been deleted, made private, or the link might be incorrect.
+                    </p>
+                    
+                    <div class="d-flex justify-content-center gap-3 mb-4">
+                        <a href="{% url 'home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Go Home
+                        </a>
+                        <a href="{% url 'explore' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i>Explore Images
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'generate_image' %}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Create New
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if suggested_images %}
+            <div class="mt-5">
+                <h4 class="mb-4">You might like these instead:</h4>
+                <div class="row">
+                    {% for image in suggested_images %}
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'post_detail' pk=image.id %}" class="text-decoration-none">
+                            <div class="card">
+                                {% if image.image %}
+                                    <img src="{{ image.image.url }}" class="card-img-top" alt="{{ image.prompt }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <p class="card-text small">{{ image.prompt|truncatechars:60 }}</p>
+                                    <small class="text-muted">by {{ image.user.username }}</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

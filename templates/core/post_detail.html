@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ image.prompt|truncatewords:8 }} - AI Social Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hashtag-container {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .hashtag-item {
+        display: inline-block;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 6px 12px;
+        margin: 4px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .hashtag-item:hover {
+        background: linear-gradient(135deg, #0056b3, #004085);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .copy-hashtags-btn {
+        background: linear-gradient(135deg, #28a745, #1e7e34);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 15px;
+    }
+    
+    .copy-hashtags-btn:hover {
+        background: linear-gradient(135deg, #1e7e34, #155724);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .copy-hashtags-btn.copied {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        animation: copySuccess 0.6s ease-out;
+    }
+    
+    @keyframes copySuccess {
+        0% { transform: translateY(-2px) scale(1); }
+        50% { transform: translateY(-2px) scale(1.05); }
+        100% { transform: translateY(-2px) scale(1); }
+    }
+    
+    .hashtag-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .hashtag-count {
+        color: #6c757d;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .copy-feedback {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.95), rgba(30, 126, 52, 0.95));
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        z-index: 1000;
+        transform: translateX(400px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+    }
+    
+    .copy-feedback.show {
+        transform: translateX(0);
+    }
+    
+    .hashtag-section {
+        animation: slideInUp 0.6s ease-out;
+    }
+    
+    @keyframes slideInUp {
+        0% {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .hashtag-container {
+            margin: 15px 0;
+            padding: 15px;
+        }
+        
+        .hashtag-item {
+            font-size: 13px;
+            padding: 5px 10px;
+            margin: 3px;
+        }
+        
+        .copy-feedback {
+            right: 10px;
+            left: 10px;
+            transform: translateY(-100px);
+        }
+        
+        .copy-feedback.show {
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% csrf_token %}
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Back Button -->
+            <div class="mb-3">
+                <a href="{% url 'explore' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Explore
+                </a>
+            </div>
+
+            <!-- Main Image Card -->
+            <div class="card shadow-lg">
+                <div class="row g-0">
+                    <!-- Image Section -->
+                    <div class="col-md-8">
+                        <div class="position-relative">
+                            {% if image.image %}
+                                <img src="{{ image.image.url }}" 
+                                     class="img-fluid w-100" 
+                                     alt="{{ image.prompt }}"
+                                     style="max-height: 600px; object-fit: contain; background: #f8f9fa;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 400px;">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-image fa-3x mb-3"></i>
+                                        <p>Image not available</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Service Badge -->
+                            <span class="badge bg-info position-absolute top-0 end-0 m-3">
+                                {{ image.get_service_display_name }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Details Section -->
+                    <div class="col-md-4">
+                        <div class="card-body h-100 d-flex flex-column">
+                            <!-- User Info -->
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ image.user.username }}</h6>
+                                    <small class="text-muted">{{ image.created_at|timesince }} ago</small>
+                                </div>
+                            </div>
+
+                            <!-- Prompt -->
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-quote-left me-2"></i>Prompt
+                                </h6>
+                                <p class="mb-0">{{ image.prompt }}</p>
+                            </div>
+
+                            <!-- Style -->
+                            {% if image.style_preset %}
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-palette me-2"></i>Style
+                                </h6>
+                                <span class="badge bg-secondary">{{ image.style_preset.name }}</span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Technical Details -->
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-cog me-2"></i>Details
+                                </h6>
+                                <ul class="list-unstyled small">
+                                    <li><strong>Dimensions:</strong> {{ image.width }}×{{ image.height }}</li>
+                                    <li><strong>File Size:</strong> {{ image.get_file_size_kb }} KB</li>
+                                    <li><strong>Generated:</strong> {{ image.created_at|date:"M d, Y" }}</li>
+                                    {% if image.seed %}
+                                    <li><strong>Seed:</strong> {{ image.seed }}</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mt-auto">
+                                <div class="d-grid gap-2">
+                                    {% if user.is_authenticated %}
+                                        <a href="{% url 'download_image' image.id %}" class="btn btn-primary">
+                                            <i class="fas fa-download me-2"></i>Download
+                                        </a>
+                                        <a href="{% url 'share_image' image.id %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-share me-2"></i>Share
+                                        </a>
+                                        {% if image.user == user %}
+                                        <div class="btn-group">
+                                            <button class="btn btn-outline-secondary" onclick="togglePrivacy('{{ image.id }}')">
+                                                <i class="fas fa-{% if image.is_public %}eye{% else %}eye-slash{% endif %} me-2"></i>
+                                                {% if image.is_public %}Public{% else %}Private{% endif %}
+                                            </button>
+                                            <a href="{% url 'delete_image' image.id %}" class="btn btn-outline-danger">
+                                                <i class="fas fa-trash me-2"></i>Delete
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <a href="{% url 'account_login' %}" class="btn btn-primary">
+                                            <i class="fas fa-sign-in-alt me-2"></i>Login to Download
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hashtags Section -->
+            {% if image.get_hashtags_list %}
+            <div class="hashtag-section">
+                <div class="hashtag-container">
+                    <div class="hashtag-stats">
+                        <h6 class="mb-0">
+                            <i class="fas fa-hashtag me-2"></i>Social Media Hashtags
+                        </h6>
+                        <span class="hashtag-count">{{ image.get_hashtags_list|length }} hashtags</span>
+                    </div>
+                    
+                    <div class="hashtags-display" id="hashtagsDisplay">
+                        {% for hashtag in image.get_hashtags_list %}
+                            <span class="hashtag-item" onclick="copyHashtag('{{ hashtag }}')">{{ hashtag }}</span>
+                        {% endfor %}
+                    </div>
+                    
+                    <button class="copy-hashtags-btn" id="copyAllBtn" onclick="copyAllHashtags()">
+                        <i class="fas fa-copy"></i>
+                        <span id="copyBtnText">Copy All Hashtags</span>
+                    </button>
+                    
+                    <!-- Hidden textarea for copying -->
+                    <textarea id="hashtagsText" style="position: absolute; left: -9999px;">{% for hashtag in image.get_hashtags_list %}{{ hashtag }}{% if not forloop.last %} {% endif %}{% endfor %}</textarea>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Related Images -->
+            {% if related_images %}
+            <div class="mt-5">
+                <h5 class="mb-3">
+                    <i class="fas fa-images me-2"></i>More from {{ image.user.username }}
+                </h5>
+                <div class="row">
+                    {% for related in related_images %}
+                    <div class="col-md-4 col-6 mb-3">
+                        <a href="{% url 'post_detail' related.id %}" class="text-decoration-none">
+                            <div class="card h-100">
+                                {% if related.image %}
+                                    <img src="{{ related.image.url }}" 
+                                         class="card-img-top" 
+                                         alt="{{ related.prompt }}"
+                                         style="height: 150px; object-fit: cover;">
+                                {% else %}
+                                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 150px;">
+                                        <i class="fas fa-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body p-2">
+                                    <p class="card-text small mb-1">{{ related.prompt|truncatewords:6 }}</p>
+                                    <small class="text-muted">{{ related.created_at|timesince }} ago</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Copy Feedback -->
+<div class="copy-feedback" id="copyFeedback">
+    <span id="feedbackText"></span>
+</div>
+
+<script>
+function togglePrivacy(imageId) {
+    fetch(`/image/toggle-privacy/${imageId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error updating privacy setting');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating privacy setting');
+    });
+}
+
+function copyHashtag(hashtag) {
+    navigator.clipboard.writeText(hashtag).then(() => {
+        showCopyFeedback(`Copied: ${hashtag}`);
+    }).catch(err => {
+        console.error('Failed to copy hashtag:', err);
+        showCopyFeedback('Failed to copy hashtag', 'error');
+    });
+}
+
+function copyAllHashtags() {
+    const hashtagsText = document.getElementById('hashtagsText').value;
+    const copyBtn = document.getElementById('copyAllBtn');
+    const copyBtnText = document.getElementById('copyBtnText');
+    
+    navigator.clipboard.writeText(hashtagsText).then(() => {
+        // Update button appearance
+        copyBtn.classList.add('copied');
+        copyBtnText.textContent = 'Copied!';
+        
+        showCopyFeedback(`Copied ${hashtagsText.split(' ').length} hashtags to clipboard!`);
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            copyBtn.classList.remove('copied');
+            copyBtnText.textContent = 'Copy All Hashtags';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy hashtags:', err);
+        showCopyFeedback('Failed to copy hashtags', 'error');
+    });
+}
+
+function showCopyFeedback(message, type = 'success') {
+    const feedback = document.getElementById('copyFeedback');
+    const feedbackText = document.getElementById('feedbackText');
+    
+    feedbackText.textContent = message;
+    feedback.classList.add('show');
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        feedback.classList.remove('show');
+    }, 3000);
+}
+
+// Initialize tooltips and animations
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to hashtags
+    const hashtags = document.querySelectorAll('.hashtag-item');
+    hashtags.forEach(hashtag => {
+        hashtag.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px) scale(1.05)';
+        });
+        
+        hashtag.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

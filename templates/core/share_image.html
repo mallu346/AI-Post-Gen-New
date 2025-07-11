@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - AI Social Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Main Image Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-share me-2"></i>{{ image.prompt|truncatechars:50 }}</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Image -->
+                    <div class="text-center mb-4">
+                        <img src="{{ image.image.url }}" alt="{{ image.prompt }}" 
+                             class="img-fluid rounded shadow" style="max-width: 600px;">
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Image Details -->
+                        <div class="col-md-6">
+                            <h5>Details</h5>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Created by:</strong></td>
+                                    <td>{{ image.user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created:</strong></td>
+                                    <td>{{ image.created_at|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AI Service:</strong></td>
+                                    <td>{{ image.get_service_display_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dimensions:</strong></td>
+                                    <td>{{ image.width }}x{{ image.height }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>File Size:</strong></td>
+                                    <td>{{ image.get_file_size_kb }} KB</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- Share Options -->
+                        <div class="col-md-6">
+                            <h5>Share Options</h5>
+                            
+                            <!-- Copy Link -->
+                            <div class="mb-3">
+                                <label class="form-label">Share Link</label>
+                                <div class="input-group">
+                                    <input type="text" id="share-url" value="{{ share_url }}" readonly 
+                                           class="form-control">
+                                    <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard()">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Social Share Buttons -->
+                            <div class="mb-3">
+                                <label class="form-label">Social Media</label>
+                                <div class="d-grid gap-2">
+                                    <!-- Row 1: Twitter, Facebook, LinkedIn -->
+                                    <div class="d-flex gap-2">
+                                        <a href="https://twitter.com/intent/tweet?text=Check out this AI-generated image: {{ image.prompt|urlencode }}&url={{ share_url|urlencode }}" 
+                                           target="_blank" class="btn btn-primary btn-sm flex-fill">
+                                            <i class="fab fa-twitter"></i> Twitter
+                                        </a>
+                                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}" 
+                                           target="_blank" class="btn btn-primary btn-sm flex-fill">
+                                            <i class="fab fa-facebook"></i> Facebook
+                                        </a>
+                                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url|urlencode }}" 
+                                           target="_blank" class="btn btn-primary btn-sm flex-fill">
+                                            <i class="fab fa-linkedin"></i> LinkedIn
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Row 2: Instagram, Reddit -->
+                                    <div class="d-flex gap-2">
+                                        <button onclick="shareToInstagram()" 
+                                                class="btn btn-gradient-instagram btn-sm flex-fill">
+                                            <i class="fab fa-instagram"></i> Instagram
+                                        </button>
+                                        <a href="https://www.reddit.com/submit?url={{ share_url|urlencode }}&title={{ image.prompt|urlencode }}" 
+                                           target="_blank" class="btn btn-warning btn-sm flex-fill">
+                                            <i class="fab fa-reddit"></i> Reddit
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Row 3: WhatsApp, Telegram -->
+                                    <div class="d-flex gap-2">
+                                        <a href="https://wa.me/?text=Check out this AI-generated image: {{ image.prompt|urlencode }} {{ share_url|urlencode }}" 
+                                           target="_blank" class="btn btn-success btn-sm flex-fill">
+                                            <i class="fab fa-whatsapp"></i> WhatsApp
+                                        </a>
+                                        <a href="https://t.me/share/url?url={{ share_url|urlencode }}&text=Check out this AI-generated image: {{ image.prompt|urlencode }}" 
+                                           target="_blank" class="btn btn-info btn-sm flex-fill">
+                                            <i class="fab fa-telegram"></i> Telegram
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Native Share (if supported) -->
+                            <div id="native-share-container" style="display: none;">
+                                <button onclick="enhancedShare()" class="btn btn-dark btn-sm w-100 mb-3">
+                                    <i class="fas fa-share-alt"></i> Share (Native)
+                                </button>
+                            </div>
+                            
+                            <!-- Download Button -->
+                            <div class="mb-3">
+                                <a href="{% url 'download_image' image.id %}" 
+                                   class="btn btn-success w-100">
+                                    <i class="fas fa-download me-2"></i>Download Image
+                                </a>
+                            </div>
+                            
+                            <!-- QR Code for Mobile Sharing -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-qrcode me-2"></i>QR Code for Mobile Sharing
+                                </label>
+                                <div class="text-center">
+                                    <div id="qr-code-container" class="d-inline-block p-3 bg-white rounded shadow-sm border">
+                                        <div id="qr-code-loading" class="text-center">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="small text-muted mt-2 mb-0">Generating QR Code...</p>
+                                        </div>
+                                        <div id="qr-code-display" style="display: none;">
+                                            <img id="qr-image" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" alt="QR Code">
+                                        </div>
+                                        <div id="qr-code-error" style="display: none;" class="text-center p-3">
+                                            <i class="fas fa-exclamation-triangle text-warning fa-2x mb-2"></i>
+                                            <p class="text-muted small mb-0">QR Code generation failed</p>
+                                        </div>
+                                    </div>
+                                    <p class="small text-muted mt-2">
+                                        <i class="fas fa-mobile-alt me-1"></i>
+                                        Scan with your phone to share easily
+                                    </p>
+                                    <div class="mt-2">
+                                        <button class="btn btn-outline-primary btn-sm me-2" onclick="downloadQRCode()" id="download-qr-btn" style="display: none;">
+                                            <i class="fas fa-download me-1"></i>Save QR Code
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="regenerateQRCode()">
+                                            <i class="fas fa-redo me-1"></i>Regenerate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Related Images -->
+            {% if related_images %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">More from {{ image.user.username }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for related in related_images %}
+                        <div class="col-md-2 col-4 mb-3">
+                            <a href="{% url 'share_image' related.id %}">
+                                <img src="{{ related.image.url }}" alt="{{ related.prompt }}" 
+                                     class="img-fluid rounded hover-opacity">
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Back Button -->
+            <div class="text-center mt-4">
+                <a href="{% url 'explore' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Explore
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Instagram Share Modal -->
+<div class="modal fade" id="instagramModal" tabindex="-1" aria-labelledby="instagramModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instagramModalLabel">
+                    <i class="fab fa-instagram me-2"></i>Share to Instagram
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fab fa-instagram fa-3x text-primary mb-3"></i>
+                    <h6>How to share to Instagram:</h6>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>Option 1: Mobile App (Recommended)</strong>
+                    <ol class="mb-0 mt-2">
+                        <li>Download the image using the button below</li>
+                        <li>Open Instagram app on your phone</li>
+                        <li>Create a new post and select the downloaded image</li>
+                        <li>Add your caption and share!</li>
+                    </ol>
+                </div>
+                
+                <div class="alert alert-secondary">
+                    <strong>Option 2: Copy Link</strong>
+                    <p class="mb-2">Copy the link below and share it in your Instagram story or bio:</p>
+                    <div class="input-group">
+                        <input type="text" id="instagram-url" value="{{ share_url }}" readonly class="form-control">
+                        <button class="btn btn-outline-primary" onclick="copyInstagramLink()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="{% url 'download_image' image.id %}" class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i>Download Image
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+const shareUrl = '{{ share_url }}';
+const imageId = '{{ image.id }}';
+
+// Copy main share URL to clipboard
+function copyToClipboard() {
+    const shareUrlInput = document.getElementById('share-url');
+    shareUrlInput.select();
+    shareUrlInput.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        
+        // Show feedback
+        const button = event.target;
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.classList.remove('btn-outline-primary');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-primary');
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy link');
+    }
+}
+
+// Copy Instagram link
+function copyInstagramLink() {
+    const instagramUrl = document.getElementById('instagram-url');
+    instagramUrl.select();
+    instagramUrl.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        
+        // Show feedback
+        const button = event.target;
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        button.classList.remove('btn-outline-primary');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-primary');
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy link');
+    }
+}
+
+// Share to Instagram function
+function shareToInstagram() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        const instagramUrl = 'instagram://camera';
+        window.location.href = instagramUrl;
+        
+        setTimeout(() => {
+            const modal = new bootstrap.Modal(document.getElementById('instagramModal'));
+            modal.show();
+        }, 1000);
+    } else {
+        const modal = new bootstrap.Modal(document.getElementById('instagramModal'));
+        modal.show();
+    }
+}
+
+// Enhanced sharing with Web Share API
+function enhancedShare() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'AI Generated Image',
+            text: '{{ image.prompt }}',
+            url: shareUrl
+        }).then(() => {
+            console.log('Successful share');
+        }).catch((error) => {
+            console.log('Error sharing:', error);
+        });
+    }
+}
+
+// Generate QR Code using Django backend - REAL QR CODES
+function generateQRCode() {
+    console.log('🔄 Starting REAL QR code generation...');
+    console.log('🆔 Image ID:', imageId);
+    console.log('🔗 Share URL:', shareUrl);
+    
+    const loadingDiv = document.getElementById('qr-code-loading');
+    const displayDiv = document.getElementById('qr-code-display');
+    const errorDiv = document.getElementById('qr-code-error');
+    const downloadBtn = document.getElementById('download-qr-btn');
+    const qrImage = document.getElementById('qr-image');
+    
+    // Reset states
+    loadingDiv.style.display = 'block';
+    displayDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+    downloadBtn.style.display = 'none';
+    
+    // Fetch QR code from Django backend
+    const qrUrl = `/qr-code/${imageId}/`;
+    console.log('📡 Calling QR endpoint:', qrUrl);
+    
+    fetch(qrUrl)
+        .then(response => {
+            console.log('📡 Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('📦 Response data:', data);
+            loadingDiv.style.display = 'none';
+            
+            if (data.success) {
+                qrImage.src = data.qr_code;
+                displayDiv.style.display = 'block';
+                downloadBtn.style.display = 'inline-block';
+                
+                console.log('✅ REAL QR Code generated successfully!');
+                console.log('🔗 QR points to:', data.share_url);
+                
+                // Test the URL accessibility
+                console.log('🧪 Testing URL accessibility...');
+                fetch(data.share_url, { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('✅ URL is accessible - QR should work!');
+                        } else {
+                            console.log('⚠️ URL returned status:', response.status);
+                        }
+                    })
+                    .catch(error => {
+                        console.log('❌ URL test failed:', error);
+                    });
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('❌ QR Code generation failed:', error);
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle text-warning fa-2x mb-2"></i>
+                <p class="text-muted small mb-0">QR Code generation failed</p>
+                <p class="text-muted small">${error.message}</p>
+                <button class="btn btn-sm btn-outline-primary mt-2" onclick="regenerateQRCode()">
+                    <i class="fas fa-redo me-1"></i>Try Again
+                </button>
+            `;
+        });
+}
+
+// Regenerate QR Code
+function regenerateQRCode() {
+    console.log('🔄 Regenerating QR code...');
+    generateQRCode();
+}
+
+// Download QR Code
+function downloadQRCode() {
+    try {
+        const qrImage = document.getElementById('qr-image');
+        const link = document.createElement('a');
+        link.download = `share-qr-code-${imageId}.png`;
+        link.href = qrImage.src;
+        link.click();
+        
+        console.log('📥 QR code downloaded');
+        
+        // Show feedback
+        const button = document.getElementById('download-qr-btn');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check me-1"></i>Downloaded!';
+        button.classList.remove('btn-outline-primary');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-primary');
+        }, 2000);
+    } catch (error) {
+        console.error('❌ Download failed:', error);
+        alert('Failed to download QR code. Please try again.');
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Page loaded, initializing...');
+    console.log('🔗 Share URL:', shareUrl);
+    console.log('🆔 Image ID:', imageId);
+    
+    // Show native share button if supported
+    if (navigator.share) {
+        document.getElementById('native-share-container').style.display = 'block';
+        console.log('📱 Native sharing supported');
+    }
+    
+    // Generate QR code immediately
+    generateQRCode();
+});
+</script>
+
+<style>
+.hover-opacity:hover {
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+/* Instagram gradient button */
+.btn-gradient-instagram {
+    background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient-instagram:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    color: white;
+}
+
+/* Enhanced button styles */
+.btn-sm {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+/* QR Code container styling */
+#qr-code-container {
+    min-height: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #0d6efd;
+    position: relative;
+}
+
+#qr-image {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 150px;
+    max-height: 150px;
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Modal enhancements */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .d-flex.gap-2 {
+        gap: 0.5rem !important;
+    }
+    
+    #qr-code-container {
+        min-height: 140px;
+    }
+    
+    #qr-image {
+        max-width: 120px;
+        max-height: 120px;
+    }
+}
+
+/* Animation for buttons */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Success animation */
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.btn-success {
+    animation: successPulse 0.3s ease;
+}
+</style>
+{% endblock %}

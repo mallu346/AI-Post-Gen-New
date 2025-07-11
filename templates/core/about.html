@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+    }
+    
+    .feature-card {
+        border: none;
+        border-radius: 15px;
+        padding: 2rem;
+        height: 100%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+        color: white;
+    }
+    
+    .icon-ai { background: linear-gradient(45deg, #667eea, #764ba2); }
+    .icon-free { background: linear-gradient(45deg, #f093fb, #f5576c); }
+    .icon-community { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+    .icon-easy { background: linear-gradient(45deg, #43e97b, #38f9d7); }
+    
+    .tech-stack {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 2rem;
+    }
+    
+    .tech-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .tech-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.5rem;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- About Header -->
+<div class="about-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">About AI Social Platform</h1>
+                <p class="lead">Democratizing AI art creation and fostering a vibrant community of digital artists and creators.</p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-robot" style="font-size: 8rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Mission Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Our Mission</h2>
+                <p class="lead text-muted">Making AI-powered creativity accessible to everyone</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="row mb-5">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon icon-ai">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h5 class="fw-bold">Advanced AI</h5>
+                <p class="text-muted">Powered by state-of-the-art AI models including Stable Diffusion and other cutting-edge technologies.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon icon-free">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <h5 class="fw-bold">Free to Use</h5>
+                <p class="text-muted">Create unlimited AI artwork without any cost. No hidden fees or subscription required.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon icon-community">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h5 class="fw-bold">Community Driven</h5>
+                <p class="text-muted">Share your creations, discover amazing art, and connect with fellow AI artists worldwide.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="feature-card text-center">
+                <div class="feature-icon icon-easy">
+                    <i class="fas fa-magic"></i>
+                </div>
+                <h5 class="fw-bold">Easy to Use</h5>
+                <p class="text-muted">Simple interface that makes AI art creation accessible to beginners and professionals alike.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center fw-bold mb-4">How It Works</h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="feature-icon icon-ai mx-auto mb-3">
+                    <span class="fw-bold">1</span>
+                </div>
+                <h5>Describe Your Vision</h5>
+                <p class="text-muted">Write a detailed description of what you want to create. Be as creative and specific as you like!</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="feature-icon icon-free mx-auto mb-3">
+                    <span class="fw-bold">2</span>
+                </div>
+                <h5>Choose Your Style</h5>
+                <p class="text-muted">Select from various artistic styles or let our AI choose the perfect style for your prompt.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="feature-icon icon-community mx-auto mb-3">
+                    <span class="fw-bold">3</span>
+                </div>
+                <h5>Generate & Share</h5>
+                <p class="text-muted">Watch as AI brings your vision to life, then share your masterpiece with the community!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center fw-bold mb-4">Built With Modern Technology</h2>
+        </div>
+        <div class="col-lg-8 mx-auto">
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <div class="tech-icon" style="background: #092e20;">
+                        <i class="fab fa-python"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Django Framework</h6>
+                        <small class="text-muted">Robust Python web framework for scalable applications</small>
+                    </div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon" style="background: #ff6b35;">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Hugging Face AI</h6>
+                        <small class="text-muted">State-of-the-art AI models for image generation</small>
+                    </div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon" style="background: #7952b3;">
+                        <i class="fab fa-bootstrap"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Bootstrap 5</h6>
+                        <small class="text-muted">Modern, responsive UI components</small>
+                    </div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon" style="background: #336791;">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">PostgreSQL</h6>
+                        <small class="text-muted">Reliable database for storing your creations</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white;">
+                <h2 class="fw-bold mb-3">Ready to Create Amazing AI Art?</h2>
+                <p class="lead mb-4">Join thousands of artists who are already creating stunning visuals with AI</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'generate_image' %}" class="btn btn-light btn-lg me-3">
+                        <i class="fas fa-wand-magic-sparkles me-2"></i>Start Creating
+                    </a>
+                    <a href="{% url 'gallery' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-images me-2"></i>View My Gallery
+                    </a>
+                {% else %}
+                    <a href="{% url 'account_signup' %}" class="btn btn-light btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Sign Up Free
+                    </a>
+                    <a href="{% url 'explore' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-search me-2"></i>Explore Gallery
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

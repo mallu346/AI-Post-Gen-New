@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Image Generator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="hero-section text-center mb-5">
+        <h1 class="display-4">AI Image Generator</h1>
+        <p class="lead">Create amazing images with artificial intelligence</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'generate' %}" class="btn btn-primary btn-lg">Generate Image</a>
+            <a href="{% url 'gallery' %}" class="btn btn-outline-primary btn-lg">My Gallery</a>
+        {% else %}
+            <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">Get Started</a>
+        {% endif %}
+    </div>
+
+    {% if user.is_authenticated and recent_images %}
+    <div class="row">
+        <div class="col-12">
+            <h3>Your Recent Creations</h3>
+            <div class="row">
+                {% for image in recent_images %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <img src="{{ image.image_url }}" class="card-img-top" alt="Generated image">
+                        <div class="card-body">
+                            <p class="card-text">{{ image.prompt|truncatechars:50 }}</p>
+                            <small class="text-muted">{{ image.timestamp }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

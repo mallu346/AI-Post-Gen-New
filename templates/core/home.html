@@ -1,0 +1,567 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Custom styles for the homepage */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 3rem;
+    /* Removed margin-top here, handled by body padding in base.html */
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    pointer-events: none;
+}
+
+.hero-section h1 {
+    font-size: 3.8rem;
+    font-weight: 700;
+    margin-bottom: 15px; /* Adjusted margin-bottom */
+    line-height: 1.2;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.hero-section p.lead {
+    font-size: 1.4rem;
+    max-width: 700px;
+    margin: 0 auto 40px auto;
+    opacity: 0.9;
+}
+
+.hero-buttons .btn {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.hero-buttons .btn-light {
+    color: #2575fc;
+    margin-right: 15px;
+}
+
+.hero-buttons .btn-light:hover {
+    background-color: #e2e6ea;
+    transform: translateY(-2px);
+}
+
+.hero-buttons .btn-outline-light {
+    border-color: white;
+    color: white;
+}
+
+.hero-buttons .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.stats-section {
+    margin-top: -80px; /* Overlap with hero section */
+    position: relative;
+    z-index: 1;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card h3 {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #6a11cb;
+    margin-bottom: 10px;
+}
+
+.stat-card p {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.features-section {
+    padding: 60px 0;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+.features-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #343a40;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, #2575fc, #6a11cb);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px auto;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1);
+}
+
+.feature-card h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 15px;
+}
+
+.feature-card p {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.post-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.post-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.post-overlay {
+    background: rgba(0,0,0,0.7);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.post-card:hover .post-overlay {
+    opacity: 1;
+}
+
+.style-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.style-card:hover {
+    border-color: var(--bs-primary);
+    transform: translateY(-2px);
+}
+
+.stat-item {
+    padding: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .hero-section h1 {
+        font-size: 3rem;
+    }
+    .hero-section p.lead {
+        font-size: 1.2rem;
+    }
+    .stats-section {
+        margin-top: -60px;
+    }
+    .stat-card {
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 0;
+    }
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+    .hero-section p.lead {
+        font-size: 1rem;
+        margin-bottom: 30px;
+    }
+    .features-section h2 {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+  <div class="container text-center">
+      <div class="row justify-content-center">
+          <div class="col-lg-8">
+              <h1 class="display-4 fw-bold mb-3">
+                  <i class="fas fa-magic me-3"></i>Welcome to AI Social Platform
+              </h1>
+              <p class="lead mb-4">Create, share, and discover amazing AI-generated art</p>
+              <a href="{% url 'generate_image' %}" class="btn btn-light btn-lg px-4 py-2">
+                  <i class="fas fa-wand-magic-sparkles me-2"></i>Generate AI Art
+              </a>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Feature Cards -->
+<div class="container mb-5">
+  <div class="row g-4">
+      <!-- AI Image Generation Card -->
+      <div class="col-lg-4 col-md-6">
+          <div class="card h-100 feature-card" onclick="navigateToGenerate()">
+              <div class="card-body text-center p-4">
+                  <div class="feature-icon mb-3">
+                      <i class="fas fa-robot fa-3x text-primary"></i>
+                  </div>
+                  <h4 class="card-title mb-3">AI Image Generation</h4>
+                  <p class="card-text text-muted mb-4">
+                      Create stunning artwork using advanced AI models like Stable Diffusion.
+                  </p>
+                  <div class="feature-stats mb-3">
+                      <small class="text-muted">
+                          <i class="fas fa-images me-1"></i>{{ total_images }} images created
+                      </small>
+                  </div>
+                  <button class="btn btn-primary">
+                      <i class="fas fa-plus me-2"></i>Start Creating
+                  </button>
+              </div>
+          </div>
+      </div>
+      <!-- Social Platform Card -->
+      <div class="col-lg-4 col-md-6">
+          <div class="card h-100 feature-card" onclick="navigateToExplore()">
+              <div class="card-body text-center p-4">
+                  <div class="feature-icon mb-3">
+                      <i class="fas fa-users fa-3x text-success"></i>
+                  </div>
+                  <h4 class="card-title mb-3">Social Platform</h4>
+                  <p class="card-text text-muted mb-4">
+                      Share your creations, like and comment on others' work, build a community.
+                  </p>
+                  <div class="feature-stats mb-3">
+                      <small class="text-muted">
+                          <i class="fas fa-user-friends me-1"></i>{{ total_users }} creators
+                      </small>
+                  </div>
+                  <button class="btn btn-success">
+                      <i class="fas fa-search me-2"></i>Explore Community
+                  </button>
+              </div>
+          </div>
+      </div>
+      <!-- Multiple Styles Card -->
+      <div class="col-lg-4 col-md-6">
+          <div class="card h-100 feature-card" onclick="showStylesModal()">
+              <div class="card-body text-center p-4">
+                  <div class="feature-icon mb-3">
+                      <i class="fas fa-palette fa-3x text-warning"></i>
+                  </div>
+                  <h4 class="card-title mb-3">Multiple Styles</h4>
+                  <p class="card-text text-muted mb-4">
+                      Choose from various art styles: realistic, anime, digital art, and more.
+                  </p>
+                  <div class="feature-stats mb-3">
+                      <small class="text-muted">
+                          <i class="fas fa-paint-brush me-1"></i>{{ style_presets.count }} styles available
+                      </small>
+                  </div>
+                  <button class="btn btn-warning">
+                      <i class="fas fa-eye me-2"></i>View Styles
+                  </button>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Quick Stats Section -->
+<div class="container mb-5">
+  <div class="row">
+      <div class="col-12">
+          <div class="card bg-light">
+              <div class="card-body">
+                  <div class="row text-center">
+                      <div class="col-md-3 col-6 mb-3">
+                          <div class="stat-item">
+                              <h3 class="text-primary mb-1">{{ total_images }}</h3>
+                              <small class="text-muted">Images Generated</small>
+                          </div>
+                      </div>
+                      <div class="col-md-3 col-6 mb-3">
+                          <div class="stat-item">
+                              <h3 class="text-success mb-1">{{ total_users }}</h3>
+                              <small class="text-muted">Active Creators</small>
+                          </div>
+                      </div>
+                      <div class="col-md-3 col-6 mb-3">
+                          <div class="stat-item">
+                              <h3 class="text-warning mb-1">{{ total_posts }}</h3>
+                              <small class="text-muted">Public Posts</small>
+                          </div>
+                      </div>
+                      <div class="col-md-3 col-6 mb-3">
+                          <div class="stat-item">
+                              <h3 class="text-info mb-1">{{ style_presets.count }}</h3>
+                              <small class="text-muted">Art Styles</small>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Trending Posts Section -->
+<div class="container mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">
+          <i class="fas fa-fire me-2 text-danger"></i>Trending Posts
+      </h2>
+      <a href="{% url 'explore' %}" class="btn btn-outline-primary">
+          View All <i class="fas fa-arrow-right ms-1"></i>
+      </a>
+  </div>
+  {% if posts %}
+      <div class="row g-4">
+          {% for post in posts %}
+              <div class="col-lg-3 col-md-4 col-sm-6">
+                  <div class="card post-card h-100">
+                      <div class="position-relative">
+                          <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.prompt }}"
+                               style="height: 200px; object-fit: cover;">
+                          
+                          <!-- Service Badge -->
+                          <span class="badge bg-info position-absolute top-0 end-0 m-2">
+                              {{ post.get_service_display_name }}
+                          </span>
+                          
+                          <!-- Quick Actions Overlay -->
+                          <div class="post-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                              <div class="btn-group">
+                                  <a href="{% url 'post_detail' post.id %}" class="btn btn-light btn-sm">
+                                      <i class="fas fa-eye"></i>
+                                  </a>
+                                  <a href="{% url 'download_image' post.id %}" class="btn btn-light btn-sm">
+                                      <i class="fas fa-download"></i>
+                                  </a>
+                                  <a href="{% url 'share_image' post.id %}" class="btn btn-light btn-sm">
+                                      <i class="fas fa-share"></i>
+                                  </a>
+                              </div>
+                          </div>
+                      </div>
+                      
+                      <div class="card-body p-3">
+                          <p class="card-text small mb-2">{{ post.prompt|truncatewords:8 }}</p>
+                          <div class="d-flex justify-content-between align-items-center">
+                              <small class="text-muted">
+                                  <i class="fas fa-user me-1"></i>{{ post.user.username }}
+                              </small>
+                              <small class="text-muted">
+                                  {{ post.created_at|timesince }} ago
+                              </small>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          {% endfor %}
+      </div>
+  {% else %}
+      <!-- Empty State -->
+      <div class="text-center py-5">
+          <i class="fas fa-images fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">No posts yet</h4>
+          <p class="text-muted mb-4">Be the first to create and share amazing AI art!</p>
+          <a href="{% url 'generate_image' %}" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>Create First Post
+          </a>
+      </div>
+  {% endif %}
+</div>
+
+<!-- Styles Modal -->
+<div class="modal fade" id="stylesModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title">
+                  <i class="fas fa-palette me-2"></i>Available Art Styles
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+              {% if style_presets %}
+                  <div class="row g-3">
+                      {% for style in style_presets %}
+                          <div class="col-md-6">
+                              <div class="card style-card" onclick="selectStyle('{{ style.id }}', '{{ style.name }}')">
+                                  <div class="card-body">
+                                      <h6 class="card-title">{{ style.name }}</h6>
+                                      <p class="card-text small text-muted">{{ style.description }}</p>
+                                      <button class="btn btn-sm btn-outline-primary">
+                                          <i class="fas fa-magic me-1"></i>Use This Style
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      {% endfor %}
+                  </div>
+              {% else %}
+                  <div class="text-center py-4">
+                      <i class="fas fa-paint-brush fa-3x text-muted mb-3"></i>
+                      <p class="text-muted">No styles configured yet.</p>
+                  </div>
+              {% endif %}
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <a href="{% url 'generate_image' %}" class="btn btn-primary">
+                  <i class="fas fa-wand-magic-sparkles me-2"></i>Start Creating
+              </a>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Navigation functions
+function navigateToGenerate() {
+  window.location.href = "{% url 'generate_image' %}";
+}
+function navigateToExplore() {
+  window.location.href = "{% url 'explore' %}";
+}
+function showStylesModal() {
+  const modal = new bootstrap.Modal(document.getElementById('stylesModal'));
+  modal.show();
+}
+function selectStyle(styleId, styleName) {
+  // Store selected style in localStorage for the generate page
+  localStorage.setItem('selectedStyle', JSON.stringify({
+      id: styleId,
+      name: styleName
+  }));
+  
+  // Navigate to generate page
+  window.location.href = "{% url 'generate_image' %}";
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+  const alertClass = type === 'success' ? 'alert-success' :
+                     type === 'error' ? 'alert-danger' :
+                     type === 'warning' ? 'alert-warning' : 'alert-info';
+  
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+  alertDiv.style.top = '20px';
+  alertDiv.style.right = '20px';
+  alertDiv.style.zIndex = '9999';
+  alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  document.body.appendChild(alertDiv);
+  
+  // Auto-remove after 4 seconds
+  setTimeout(() => {
+      if (alertDiv.parentNode) {
+          alertDiv.parentNode.removeChild(alertDiv);
+      }
+  }, 4000);
+}
+
+// Add some interactive feedback
+document.addEventListener('DOMContentLoaded', function() {
+  // Add click feedback to feature cards
+  document.querySelectorAll('.feature-card').forEach(card => {
+      card.addEventListener('click', function() {
+          this.style.transform = 'scale(0.98)';
+          setTimeout(() => {
+              this.style.transform = '';
+          }, 150);
+      });
+  });
+  
+  // Add hover effects to post cards
+  document.querySelectorAll('.post-card').forEach(card => {
+      card.addEventListener('mouseenter', function() {
+          showToast('Click to view details, download, or share!', 'info');
+      });
+  });
+});
+</script>
+{% endblock %}

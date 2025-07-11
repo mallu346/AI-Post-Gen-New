@@ -1,0 +1,1038 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generate AI Image - AI Social Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Voice Recognition Styles (from previous version) */
+    .voice-input-container {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+    }
+    
+    .prompt-textarea {
+        flex: 1;
+        padding-right: 70px !important;
+        resize: vertical;
+        min-height: 120px;
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    
+    .prompt-textarea:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+    
+    .voice-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 48px;
+        height: 48px;
+        border: none;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 10;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    
+    .voice-btn:hover {
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    }
+    
+    .voice-btn:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+    
+    .voice-btn.listening {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        animation: voicePulse 1.5s infinite, voiceGlow 2s infinite;
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    
+    .voice-btn.processing {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        animation: voiceSpin 1s linear infinite;
+    }
+    
+    .voice-btn.success {
+        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        animation: voiceSuccess 0.6s ease-out;
+    }
+    
+    @keyframes voicePulse {
+        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+    
+    @keyframes voiceGlow {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.2); }
+    }
+    
+    @keyframes voiceSpin {
+        0% { transform: translateY(-50%) rotate(0deg); }
+        100% { transform: translateY(-50%) rotate(360deg); }
+    }
+    
+    @keyframes voiceSuccess {
+        0% { transform: translateY(-50%) scale(1); }
+        50% { transform: translateY(-50%) scale(1.2); }
+        100% { transform: translateY(-50%) scale(1); }
+    }
+    
+    .voice-status {
+        position: absolute;
+        top: -45px;
+        right: 0;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(33, 37, 41, 0.9));
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+    }
+    
+    .voice-status.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .voice-status::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        right: 20px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid rgba(0, 0, 0, 0.9);
+    }
+    
+    .voice-wave {
+        display: none;
+        align-items: center;
+        gap: 3px;
+        margin-left: 15px;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    }
+    
+    .voice-wave.show {
+        display: flex;
+        animation: waveSlideIn 0.3s ease-out;
+    }
+    
+    @keyframes waveSlideIn {
+        0% { opacity: 0; transform: translateX(-20px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
+    
+    .wave-bar {
+        width: 4px;
+        height: 20px;
+        background: white;
+        border-radius: 2px;
+        animation: waveAnimation 1.4s ease-in-out infinite;
+    }
+    
+    .wave-bar:nth-child(1) { animation-delay: 0s; }
+    .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+    
+    @keyframes waveAnimation {
+        0%, 40%, 100% { 
+            transform: scaleY(0.4);
+            opacity: 0.7;
+        }
+        20% { 
+            transform: scaleY(1);
+            opacity: 1;
+        }
+    }
+    
+    .voice-controls {
+        margin-top: 15px;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+        display: none;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .voice-controls.show {
+        display: flex;
+        animation: controlsSlideDown 0.3s ease-out;
+    }
+    
+    @keyframes controlsSlideDown {
+        0% { opacity: 0; transform: translateY(-10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    .voice-language {
+        padding: 8px 12px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .voice-language:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+    
+    .voice-commands {
+        background: linear-gradient(135deg, #fff, #f8f9fa);
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 15px;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .voice-commands.show {
+        display: block;
+        animation: commandsSlideDown 0.3s ease-out;
+    }
+    
+    @keyframes commandsSlideDown {
+        0% { opacity: 0; transform: translateY(-10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    .voice-commands h6 {
+        color: #495057;
+        margin-bottom: 15px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .voice-commands ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .voice-commands li {
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+    
+    .voice-commands strong {
+        color: #007bff;
+        font-weight: 600;
+    }
+    
+    .voice-feedback {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(33, 37, 41, 0.95));
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        z-index: 1000;
+        transform: translateX(400px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: 320px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .voice-feedback.show {
+        transform: translateX(0);
+    }
+    
+    .voice-feedback .close-btn {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        font-size: 18px;
+        transition: color 0.3s ease;
+        padding: 4px;
+    }
+    
+    .voice-feedback .close-btn:hover {
+        color: white;
+    }
+    
+    .voice-help-btn {
+        background: none;
+        border: none;
+        color: #007bff;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+    
+    .voice-help-btn:hover {
+        background: rgba(0, 123, 255, 0.1);
+        color: #0056b3;
+    }
+    
+    .control-btn {
+        padding: 8px 16px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        background: white;
+        color: #495057;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .control-btn:hover {
+        border-color: #007bff;
+        color: #007bff;
+        background: rgba(0, 123, 255, 0.05);
+    }
+    
+    .control-btn:active {
+        transform: scale(0.95);
+    }
+    
+    /* Enhanced form styling */
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-text {
+        color: #6c757d;
+        font-size: 14px;
+        margin-top: 6px;
+        line-height: 1.4;
+    }
+    
+    /* Hashtag preview styles */
+    .hashtag-preview {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .trending-hashtag {
+        display: inline-block;
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+        padding: 4px 8px;
+        margin: 2px;
+        border-radius: 12px;
+        font-size: 12px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .trending-hashtag:hover {
+        background: linear-gradient(135deg, #138496, #117a8b);
+        transform: translateY(-1px);
+        color: white;
+        text-decoration: none;
+    }
+    
+    /* Styles copied from previous home.html for consistency */
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        /* Removed margin-top here, handled by body padding in base.html */
+    }
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        pointer-events: none;
+    }
+    .hero-section h1 {
+        margin-bottom: 15px; /* Adjusted margin-bottom */
+    }
+    .feature-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .feature-icon {
+        transition: transform 0.3s ease;
+    }
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1);
+    }
+    .style-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+    .style-card:hover {
+        border-color: var(--bs-primary);
+        transform: translateY(-2px);
+    }
+    .stat-item {
+        padding: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section (Adapted from previous home.html) -->
+<div class="hero-section text-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-wand-magic-sparkles me-3"></i>Generate AI Image
+                </h1>
+                <p class="lead mb-4">Describe your vision and let AI bring it to life</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <!-- Generation Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card feature-card"> {# Applied feature-card style #}
+                <div class="card-body p-4">
+                    <form method="POST" id="generateForm">
+                        {% csrf_token %}
+                        
+                        <!-- Prompt Input with Voice Recognition -->
+                        <div class="mb-4">
+                            <label for="{{ form.prompt.id_for_label }}" class="form-label">
+                                <i class="fas fa-lightbulb me-2"></i>Describe Your Image
+                                <span class="voice-wave" id="voiceWave">
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                </span>
+                            </label>
+                            
+                            <div class="voice-input-container">
+                                <textarea 
+                                    name="{{ form.prompt.name }}" 
+                                    id="{{ form.prompt.id_for_label }}"
+                                    class="form-control prompt-textarea"
+                                    placeholder="Describe the image you want to generate... (Click the mic to speak)"
+                                    required>{{ form.prompt.value|default_if_none:"" }}</textarea>
+                                
+                                <button type="button" class="voice-btn" id="voiceBtn" title="Click to speak">
+                                    <i class="fas fa-microphone" id="voiceIcon"></i>
+                                </button>
+                                
+                                <div class="voice-status" id="voiceStatus"></div>
+                            </div>
+                            
+                            <div class="form-text">
+                                Be descriptive! Include details about style, colors, mood, and composition.
+                                <button type="button" class="voice-help-btn" id="toggleVoiceHelp">
+                                    <i class="fas fa-question-circle"></i> Voice Commands
+                                </button>
+                            </div>
+                            
+                            <!-- Voice Controls -->
+                            <div class="voice-controls" id="voiceControls">
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="form-label mb-0">Language:</label>
+                                    <select class="voice-language" id="voiceLanguage">
+                                        <option value="en-US">🇺🇸 English (US)</option>
+                                        <option value="en-GB">🇬🇧 English (UK)</option>
+                                        <option value="es-ES">🇪🇸 Spanish</option>
+                                        <option value="fr-FR">🇫🇷 French</option>
+                                        <option value="de-DE">🇩🇪 German</option>
+                                        <option value="it-IT">🇮🇹 Italian</option>
+                                        <option value="pt-BR">🇧🇷 Portuguese</option>
+                                        <option value="ja-JP">🇯🇵 Japanese</option>
+                                        <option value="ko-KR">🇰🇷 Korean</option>
+                                        <option value="zh-CN">🇨🇳 Chinese</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="control-btn" id="clearText">
+                                        <i class="fas fa-eraser"></i> Clear
+                                    </button>
+                                    
+                                    <button type="button" class="control-btn" id="testVoice">
+                                        <i class="fas fa-volume-up"></i> Test
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Voice Commands Help -->
+                            <div class="voice-commands" id="voiceCommands">
+                                <h6><i class="fas fa-microphone me-2"></i>Voice Commands</h6>
+                                <ul>
+                                    <li><strong>"Clear text"</strong> - Clears the description field</li>
+                                    <li><strong>"New line"</strong> - Adds a line break</li>
+                                    <li><strong>"Stop listening"</strong> - Stops voice recognition</li>
+                                    <li><strong>"Generate image"</strong> - Submits the form</li>
+                                    <li><strong>"Add comma"</strong> - Adds a comma</li>
+                                    <li><strong>"Add period"</strong> - Adds a period</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Style Preset -->
+                        <div class="mb-4">
+                            <label for="{{ form.style_preset.id_for_label }}" class="form-label">
+                                <i class="fas fa-palette me-2"></i>Style Preset
+                            </label>
+                            {{ form.style_preset }}
+                            <div class="form-text">
+                                Choose a style to enhance your prompt with specific artistic characteristics.
+                            </div>
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <div class="mb-4">
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedOptions">
+                                <i class="fas fa-cog me-2"></i>Advanced Options
+                                <i class="fas fa-chevron-down ms-2"></i>
+                            </button>
+                            
+                            <div class="collapse mt-3" id="advancedOptions">
+                                <div class="card card-body feature-card"> {# Applied feature-card style #}
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="{{ form.width.id_for_label }}" class="form-label">Width</label>
+                                            {{ form.width }}
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="{{ form.height.id_for_label }}" class="form-label">Height</label>
+                                            {{ form.height }}
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="{{ form.seed.id_for_label }}" class="form-label">Seed (Optional)</label>
+                                            {{ form.seed }}
+                                            <div class="form-text">Use the same seed to reproduce results</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+                                <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Image & Hashtags
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trending Hashtags Preview -->
+    {% if trending_hashtags %}
+    <div class="row mt-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="hashtag-preview feature-card"> {# Applied feature-card style #}
+                <h6 class="mb-3">
+                    <i class="fas fa-fire me-2"></i>Trending AI Art Hashtags
+                </h6>
+                <div>
+                    {% for hashtag in trending_hashtags %}
+                        <span class="trending-hashtag">{{ hashtag }}</span>
+                    {% endfor %}
+                </div>
+                <small class="text-muted d-block mt-2">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Hashtags will be automatically generated for your image based on your prompt and style!
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tips Section -->
+    <div class="row mt-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="card feature-card"> {# Applied feature-card style #}
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-lightbulb me-2"></i>Tips for Better Results
+                    </h5>
+                    <ul class="mb-0">
+                        <li><strong>Be specific:</strong> Instead of "a cat", try "a fluffy orange tabby cat sitting on a windowsill"</li>
+                        <li><strong>Include style details:</strong> "photorealistic", "oil painting", "digital art", etc.</li>
+                        <li><strong>Mention lighting:</strong> "soft lighting", "dramatic shadows", "golden hour"</li>
+                        <li><strong>Add mood:</strong> "peaceful", "mysterious", "vibrant", "melancholic"</li>
+                        <li><strong>Specify composition:</strong> "close-up", "wide shot", "bird's eye view"</li>
+                        <li><strong>Voice tip:</strong> Speak clearly and pause between phrases for better recognition</li>
+                        <li><strong>Hashtag tip:</strong> More descriptive prompts generate better hashtags!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Voice Feedback Modal -->
+<div class="voice-feedback" id="voiceFeedback">
+    <button class="close-btn" id="closeFeedback">&times;</button>
+    <div id="feedbackContent"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+class VoiceRecognition {
+    constructor() {
+        this.recognition = null;
+        this.isListening = false;
+        this.isSupported = false;
+        this.currentLanguage = 'en-US';
+        this.interimResults = '';
+        this.finalResults = '';
+        
+        this.initElements();
+        this.initRecognition();
+        this.bindEvents();
+    }
+    
+    initElements() {
+        this.voiceBtn = document.getElementById('voiceBtn');
+        this.voiceIcon = document.getElementById('voiceIcon');
+        this.voiceStatus = document.getElementById('voiceStatus');
+        this.voiceControls = document.getElementById('voiceControls');
+        this.voiceCommands = document.getElementById('voiceCommands');
+        this.voiceLanguage = document.getElementById('voiceLanguage');
+        this.voiceWave = document.getElementById('voiceWave');
+        this.voiceFeedback = document.getElementById('voiceFeedback');
+        this.feedbackContent = document.getElementById('feedbackContent');
+        this.promptTextarea = document.getElementById('{{ form.prompt.id_for_label }}');
+        this.toggleVoiceHelp = document.getElementById('toggleVoiceHelp');
+        this.clearText = document.getElementById('clearText');
+        this.testVoice = document.getElementById('testVoice');
+        this.closeFeedback = document.getElementById('closeFeedback');
+    }
+    
+    initRecognition() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            this.recognition = new SpeechRecognition();
+            
+            this.recognition.continuous = true;
+            this.recognition.interimResults = true;
+            this.recognition.lang = this.currentLanguage;
+            this.recognition.maxAlternatives = 1;
+            
+            this.setupRecognitionEvents();
+            this.isSupported = true;
+            this.showFeedback('🎤 Voice recognition ready! Click the microphone to start.', 'success');
+        } else {
+            this.isSupported = false;
+            this.voiceBtn.disabled = true;
+            this.voiceBtn.title = 'Voice recognition not supported in this browser';
+            this.voiceIcon.className = 'fas fa-microphone-slash';
+            this.showFeedback('❌ Voice recognition not supported. Try Chrome, Edge, or Safari.', 'error');
+        }
+    }
+    
+    setupRecognitionEvents() {
+        this.recognition.onstart = () => {
+            this.isListening = true;
+            this.updateUI('listening');
+            this.showStatus('🎤 Listening... Speak now!');
+            this.voiceWave.classList.add('show');
+        };
+        
+        this.recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+            if (finalTranscript) {
+                const command = finalTranscript.toLowerCase().trim();
+                
+                if (this.handleVoiceCommand(command)) {
+                    return;
+                }
+                
+                this.addTextToPrompt(finalTranscript);
+                this.showStatus('✅ Text added successfully!');
+                this.updateUI('success');
+                
+                setTimeout(() => {
+                    if (this.isListening) {
+                        this.updateUI('listening');
+                        this.showStatus('🎤 Continue speaking...');
+                    }
+                }, 1000);
+            }
+            
+            if (interimTranscript) {
+                this.showStatus(`🎤 "${interimTranscript}"`);
+            }
+        };
+        
+        this.recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            this.handleError(event.error);
+        };
+        
+        this.recognition.onend = () => {
+            this.isListening = false;
+            this.updateUI('idle');
+            this.hideStatus();
+            this.voiceWave.classList.remove('show');
+        };
+    }
+    
+    handleVoiceCommand(command) {
+        const commands = {
+            'clear text': () => {
+                this.promptTextarea.value = '';
+                this.showFeedback('✅ Text cleared!', 'success');
+                return true;
+            },
+            'new line': () => {
+                this.addTextToPrompt('\n');
+                return true;
+            },
+            'stop listening': () => {
+                this.stopListening();
+                this.showFeedback('🛑 Stopped listening', 'info');
+                return true;
+            },
+            'generate image': () => {
+                document.getElementById('generateForm').submit();
+                return true;
+            },
+            'add comma': () => {
+                this.addTextToPrompt(', ');
+                return true;
+            },
+            'add period': () => {
+                this.addTextToPrompt('. ');
+                return true;
+            }
+        };
+        
+        for (const [cmd, action] of Object.entries(commands)) {
+            if (command.includes(cmd)) {
+                action();
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    addTextToPrompt(text) {
+        const currentValue = this.promptTextarea.value;
+        const newValue = currentValue + (currentValue ? ' ' : '') + text.trim();
+        this.promptTextarea.value = newValue;
+        
+        this.promptTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Auto-resize textarea
+        this.promptTextarea.style.height = 'auto';
+        this.promptTextarea.style.height = Math.max(120, this.promptTextarea.scrollHeight) + 'px';
+    }
+    
+    bindEvents() {
+        this.voiceBtn.addEventListener('click', () => {
+            if (!this.isSupported) return;
+            
+            if (this.isListening) {
+                this.stopListening();
+            } else {
+                this.startListening();
+            }
+        });
+        
+        this.voiceLanguage.addEventListener('change', (e) => {
+            this.currentLanguage = e.target.value;
+            if (this.recognition) {
+                this.recognition.lang = this.currentLanguage;
+            }
+            this.showFeedback(`🌍 Language changed to ${e.target.selectedOptions[0].text}`, 'info');
+        });
+        
+        this.toggleVoiceHelp.addEventListener('click', () => {
+            this.voiceCommands.classList.toggle('show');
+            this.voiceControls.classList.toggle('show');
+        });
+        
+        this.clearText.addEventListener('click', () => {
+            this.promptTextarea.value = '';
+            this.promptTextarea.style.height = '120px';
+            this.showFeedback('✅ Text cleared!', 'success');
+        });
+        
+        this.testVoice.addEventListener('click', () => {
+            this.testSpeechSynthesis();
+        });
+        
+        this.closeFeedback.addEventListener('click', () => {
+            this.voiceFeedback.classList.remove('show');
+        });
+        
+        // Auto-hide feedback
+        let feedbackTimeout;
+        const observer = new MutationObserver(() => {
+            if (this.voiceFeedback.classList.contains('show')) {
+                clearTimeout(feedbackTimeout);
+                feedbackTimeout = setTimeout(() => {
+                    this.voiceFeedback.classList.remove('show');
+                }, 5000);
+            }
+        });
+        observer.observe(this.voiceFeedback, { attributes: true, attributeFilter: ['class'] });
+        
+        // Auto-resize textarea
+        this.promptTextarea.addEventListener('input', () => {
+            this.promptTextarea.style.height = 'auto';
+            this.promptTextarea.style.height = Math.max(120, this.promptTextarea.scrollHeight) + 'px';
+        });
+    }
+    
+    startListening() {
+        if (!this.isSupported || this.isListening) return;
+        
+        try {
+            this.recognition.start();
+            this.showFeedback('🎤 Started listening! Speak your image description.', 'info');
+        } catch (error) {
+            console.error('Error starting recognition:', error);
+            this.showFeedback('❌ Error starting voice recognition. Please try again.', 'error');
+        }
+    }
+    
+    stopListening() {
+        if (!this.isSupported || !this.isListening) return;
+        
+        try {
+            this.recognition.stop();
+            this.showFeedback('🛑 Voice recognition stopped.', 'info');
+        } catch (error) {
+            console.error('Error stopping recognition:', error);
+        }
+    }
+    
+    updateUI(state) {
+        this.voiceBtn.className = 'voice-btn';
+        
+        switch (state) {
+            case 'listening':
+                this.voiceBtn.classList.add('listening');
+                this.voiceIcon.className = 'fas fa-stop';
+                this.voiceBtn.title = 'Click to stop listening';
+                break;
+            case 'processing':
+                this.voiceBtn.classList.add('processing');
+                this.voiceIcon.className = 'fas fa-cog';
+                this.voiceBtn.title = 'Processing...';
+                break;
+            case 'success':
+                this.voiceBtn.classList.add('success');
+                this.voiceIcon.className = 'fas fa-check';
+                this.voiceBtn.title = 'Text added successfully';
+                break;
+            default:
+                this.voiceIcon.className = 'fas fa-microphone';
+                this.voiceBtn.title = 'Click to speak';
+        }
+    }
+    
+    showStatus(message) {
+        this.voiceStatus.textContent = message;
+        this.voiceStatus.classList.add('show');
+    }
+    
+    hideStatus() {
+        this.voiceStatus.classList.remove('show');
+    }
+    
+    showFeedback(message, type = 'info') {
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+        
+        this.feedbackContent.innerHTML = `${icons[type]} ${message}`;
+        this.voiceFeedback.classList.add('show');
+    }
+    
+    handleError(error) {
+        this.isListening = false;
+        this.updateUI('idle');
+        this.hideStatus();
+        this.voiceWave.classList.remove('show');
+        
+        const errorMessages = {
+            'network': '🌐 Network error. Please check your internet connection.',
+            'not-allowed': '🚫 Microphone access denied. Please allow microphone access.',
+            'no-speech': '🔇 No speech detected. Please speak louder or closer to the microphone.',
+            'audio-capture': '🎤 Microphone not found. Please check your microphone.',
+            'service-not-allowed': '🚫 Speech recognition service not allowed.',
+            'aborted': '🛑 Speech recognition was aborted.',
+            'language-not-supported': '🌍 Language not supported. Please try a different language.'
+        };
+        
+        const message = errorMessages[error] || `❌ Speech recognition error: ${error}`;
+        this.showFeedback(message, 'error');
+    }
+    
+    testSpeechSynthesis() {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance('Voice recognition is working correctly!');
+            utterance.lang = this.currentLanguage;
+            speechSynthesis.speak(utterance);
+            this.showFeedback('🔊 Testing speech synthesis...', 'info');
+        } else {
+            this.showFeedback('❌ Speech synthesis not supported.', 'error');
+        }
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize voice recognition
+    const voiceRecognition = new VoiceRecognition();
+    
+    // Original form submission handler
+    const form = document.getElementById('generateForm');
+    const btn = document.getElementById('generateBtn');
+    
+    form.addEventListener('submit', function() {
+        if (voiceRecognition.isListening) {
+            voiceRecognition.stopListening();
+        }
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        btn.disabled = true;
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + Shift + V to toggle voice recognition
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'V') {
+            e.preventDefault();
+            if (voiceRecognition.isListening) {
+                voiceRecognition.stopListening();
+            } else {
+                voiceRecognition.startListening();
+            }
+        }
+        
+        // Escape to stop listening
+        if (e.key === 'Escape' && voiceRecognition.isListening) {
+            voiceRecognition.stopListening();
+        }
+    });
+
+    // Toast notification function (copied from home.html)
+    function showToast(message, type = 'info') {
+        const alertClass = type === 'success' ? 'alert-success' :
+                           type === 'error' ? 'alert-danger' :
+                           type === 'warning' ? 'alert-warning' : 'alert-info';
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+        alertDiv.style.top = '20px';
+        alertDiv.style.right = '20px';
+        alertDiv.style.zIndex = '9999';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove after 4 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.parentNode.removeChild(alertDiv);
+            }
+        }, 4000);
+    }
+});
+</script>
+{% endblock %}

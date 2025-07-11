@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Image - AI Social Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-trash me-2"></i>Delete Image</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Image Preview -->
+                    <div class="text-center mb-4">
+                        <img src="{{ image.image.url }}" alt="{{ image.prompt }}" 
+                             class="img-fluid rounded shadow" style="max-width: 400px;">
+                    </div>
+                    
+                    <!-- Image Details -->
+                    <div class="mb-4">
+                        <h5>Image Details</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Prompt:</strong></td>
+                                <td>{{ image.prompt }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Created:</strong></td>
+                                <td>{{ image.created_at|date:"F d, Y g:i A" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Service:</strong></td>
+                                <td>{{ image.get_service_display_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Size:</strong></td>
+                                <td>{{ image.get_file_size_kb }} KB ({{ image.width }}x{{ image.height }})</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Warning -->
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning!</strong> This action cannot be undone. The image will be permanently deleted from your gallery and the server.
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end">
+                        <a href="{% url 'gallery' %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Delete Image
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
