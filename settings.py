@@ -151,30 +151,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # API Configuration - Load from .env file with fallback
-try:
-  REPLICATE_API_TOKEN = config('REPLICATE_API_TOKEN', default='')
-  # IMPORTANT: Replace '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' with your actual Hugging Face API token.
-  # You can get one from your Hugging Face profile settings -> Access Tokens.
-  HUGGINGFACE_API_TOKEN = config('HUGGINGFACE_API_TOKEN', default='')
-  
-  # Debug print to see what's loaded
-  print(f"Settings loaded - REPLICATE: {bool(REPLICATE_API_TOKEN)}")
-  print(f"Settings loaded - HUGGINGFACE: {bool(HUGGINGFACE_API_TOKEN)}")
-  
-  # Fallback to hardcoded tokens if .env fails
-  if not REPLICATE_API_TOKEN:
-      REPLICATE_API_TOKEN = 'r8_PHHDOABjNutsAjxKK0bT5sr8dkW7LKK11q5Ci'
-      print("Using fallback REPLICATE token")
-      
-  if not HUGGINGFACE_API_TOKEN:
-      HUGGINGFACE_API_TOKEN = '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' # Placeholder - REPLACE THIS!
-      print("Using fallback HUGGINGFACE token")
-      
-except Exception as e:
-  print(f"Error loading tokens: {e}")
-  # Direct fallback
-  REPLICATE_API_TOKEN = 'r8_PHHDOABjNutsAjxKK0bT5sr8dkW7LKK11q5Ci'
-  HUGGINGFACE_API_TOKEN = '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' # Placeholder - REPLACE THIS!
+
 
 # Email Configuration (for password reset)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
