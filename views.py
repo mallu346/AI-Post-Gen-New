@@ -410,7 +410,7 @@ def generate_with_hf_spaces(prompt):
         api_url = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
         
         headers = {
-            "Authorization": "Bearer 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"  # Your HF token
+            "Authorization": "Bearer hf_LtDyUTAFjnqOBtkMkaLhuySSSTcYXfotIJOS"  # Your HF token
         }
         
         payload = {
