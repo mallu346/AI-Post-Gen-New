@@ -1,9 +1,9 @@
 # AI-Image-Gen
 ### 🔑 Login Page
-![Login Page](screenshot/Loginpage.jpeg)
+![Login Page](screenshot/login.png)
 
-### signup Page
-![Home Page](screenshot/Signuppage.jpeg)
+### 📝 Signup Page
+![Signup Page](screenshot/signup.png)
 
-### 🏠 home Page
-![Cart Page](screenshot/homePage.jpeg)
+### 🏠 Home Page
+![Home Page](screenshot/home.png)
