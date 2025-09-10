@@ -1,7 +1,6 @@
 ![GitHub stars](https://img.shields.io/github/stars/mallu346/AI-Post-Gen-New?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/mallu346/AI-Post-Gen-New?style=social)
 ![GitHub issues](https://img.shields.io/github/issues/mallu346/AI-Post-Gen-New)
-![GitHub license](https://img.shields.io/github/license/mallu346/AI-Post-Gen-New)
 
 # 🎨 Social Media Post Generator
 
